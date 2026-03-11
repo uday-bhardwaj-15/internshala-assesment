@@ -44,8 +44,10 @@ function BookingContent() {
 
   useEffect(() => {
     if (isAuthLoading) return
-    if (!user || user.type !== 'customer') {
-      router.push('/login?type=customer')
+    
+    // Agencies cannot book cars
+    if (user && user.type === 'agency') {
+      router.push('/')
       return
     }
 
@@ -72,6 +74,12 @@ function BookingContent() {
   }, [user, isAuthLoading, carId, router])
 
   const handleBooking = async () => {
+    if (!user) {
+      const callbackUrl = encodeURIComponent(window.location.href)
+      router.push(`/login?type=customer&callbackUrl=${callbackUrl}`)
+      return
+    }
+
     if (!dateRange?.from || !dateRange?.to) {
       setError('Please select a valid date range.')
       return
@@ -230,10 +238,10 @@ function BookingContent() {
 
         <button
             onClick={handleBooking}
-            disabled={isLoading || !dateRange?.from || !dateRange?.to}
+            disabled={isLoading || (!!user && (!dateRange?.from || !dateRange?.to))}
             className="w-full bg-black text-white font-semibold py-4 rounded-xl text-lg hover:bg-gray-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-            {isLoading ? 'Processing...' : 'Confirm Booking'}
+            {isLoading ? 'Processing...' : user ? 'Confirm Booking' : 'Sign in to Book'}
         </button>
       </div>
     </div>

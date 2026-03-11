@@ -223,14 +223,6 @@ export function CarsListing() {
   }, [])
 
   const handleBookClick = (carId: string) => {
-    if (!user) {
-      router.push('/login?type=customer')
-      return
-    }
-    if (user.type === 'agency') {
-      alert('Agencies cannot book cars.')
-      return
-    }
     // Basic default booking logic for UI mockup
     router.push(`/booking/${carId}?days=1&date=${new Date().toISOString().split('T')[0]}`)
   }

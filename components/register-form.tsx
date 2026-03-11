@@ -54,7 +54,8 @@ export function RegisterForm() {
         userType === 'agency' ? formData.agencyName : undefined
       )
 
-      router.push(userType === 'agency' ? '/agency/cars' : '/')
+      const callbackUrl = searchParams.get('callbackUrl')
+      router.push(callbackUrl || (userType === 'agency' ? '/agency/cars' : '/'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {
@@ -165,7 +166,7 @@ export function RegisterForm() {
             <div className="text-center text-sm text-gray-500 pt-6">
               Already have an account?{' '}
               <Link
-                href={`/login?type=${userType}`}
+                href={`/login?type=${userType}${searchParams.get('callbackUrl') ? `&callbackUrl=${encodeURIComponent(searchParams.get('callbackUrl')!)}` : ''}`}
                 className="text-black font-semibold hover:underline"
               >
                 Sign in

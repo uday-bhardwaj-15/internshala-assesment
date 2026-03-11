@@ -24,7 +24,8 @@ export function LoginForm() {
 
     try {
       await login(email, password, userType)
-      router.push(userType === 'agency' ? '/agency/cars' : '/')
+      const callbackUrl = searchParams.get('callbackUrl')
+      router.push(callbackUrl || (userType === 'agency' ? '/agency/cars' : '/'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
@@ -89,7 +90,7 @@ export function LoginForm() {
             <div className="text-center text-sm text-gray-500 pt-6">
               Don't have an account?{' '}
               <Link
-                href={`/register?type=${userType}`}
+                href={`/register?type=${userType}${searchParams.get('callbackUrl') ? `&callbackUrl=${encodeURIComponent(searchParams.get('callbackUrl')!)}` : ''}`}
                 className="text-black font-semibold hover:underline"
               >
                 Sign up
