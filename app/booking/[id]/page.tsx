@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { Navbar } from '@/components/navbar'
 import { AuthProvider, useAuth } from '@/lib/auth-context'
 import { AlertCircle, CheckCircle, ChevronLeft } from 'lucide-react'
+import { DatePickerWithRange } from '@/components/date-range-picker'
+import { DateRange } from 'react-day-picker'
+import { addDays, differenceInDays } from 'date-fns'
 
 function BookingContent() {
   const router = useRouter()
@@ -14,14 +17,30 @@ function BookingContent() {
   const { user, isLoading: isAuthLoading } = useAuth()
 
   const carId = params.id as string
-  const days = parseInt(searchParams.get('days') || '1')
-  const date = searchParams.get('date') || new Date().toISOString().split('T')[0]
+  
+  const initialDateStr = searchParams.get('date')
+  const initialDate = initialDateStr ? new Date(initialDateStr) : new Date()
+  const initialDays = parseInt(searchParams.get('days') || '1')
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: initialDate,
+    to: addDays(initialDate, initialDays),
+  })
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [carDetails, setCarDetails] = useState<any>(null)
   const [isCarLoading, setIsCarLoading] = useState(true)
+
+  // Derived state
+  const days = dateRange?.from && dateRange?.to 
+    ? Math.max(1, differenceInDays(dateRange.to, dateRange.from))
+    : 1
+  
+  const date = dateRange?.from 
+    ? dateRange.from.toISOString().split('T')[0] 
+    : new Date().toISOString().split('T')[0]
 
   useEffect(() => {
     if (isAuthLoading) return
@@ -53,12 +72,16 @@ function BookingContent() {
   }, [user, isAuthLoading, carId, router])
 
   const handleBooking = async () => {
+    if (!dateRange?.from || !dateRange?.to) {
+      setError('Please select a valid date range.')
+      return
+    }
+
     setError('')
     setIsLoading(true)
 
     try {
-      const endDate = new Date(date)
-      endDate.setDate(endDate.getDate() + days)
+      const endDate = dateRange.to.toISOString().split('T')[0]
 
       const res = await fetch('/api/bookings', {
         method: 'POST',
@@ -66,7 +89,7 @@ function BookingContent() {
         body: JSON.stringify({
           carId,
           startDate: date,
-          endDate: endDate.toISOString().split('T')[0],
+          endDate: endDate,
           numberOfDays: days,
         }),
       })
@@ -165,6 +188,11 @@ function BookingContent() {
           </div>
         )}
 
+        <div className="mb-6 space-y-2">
+            <label className="text-sm font-bold text-gray-900">Select Booking Window</label>
+            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+        </div>
+
         <div className="bg-gray-50 rounded-xl p-6 border border-gray-100 mb-8 space-y-4">
             <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-4">
                 <div>
@@ -202,8 +230,8 @@ function BookingContent() {
 
         <button
             onClick={handleBooking}
-            disabled={isLoading}
-            className="w-full bg-black text-white font-semibold py-4 rounded-xl text-lg hover:bg-gray-800 transition-colors disabled:opacity-70"
+            disabled={isLoading || !dateRange?.from || !dateRange?.to}
+            className="w-full bg-black text-white font-semibold py-4 rounded-xl text-lg hover:bg-gray-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
             {isLoading ? 'Processing...' : 'Confirm Booking'}
         </button>

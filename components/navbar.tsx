@@ -2,9 +2,77 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { Car, LogOut, Menu, UserCircle } from 'lucide-react'
+import { Car, LogOut, Menu, UserCircle, Home, Calendar, Heart } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
+
+function NavbarMobileContent({ user, logout, pathname }: any) {
+  const navItems = [
+    { icon: Home, label: 'Home', href: '/' },
+    { icon: Car, label: 'Vehicles', href: '/cars' },
+    { icon: Calendar, label: 'Bookings', href: user?.type === 'agency' ? '/agency/bookings' : '/customer/bookings' },
+    { icon: Heart, label: 'Favourites', href: '/favorites' },
+  ]
+
+  return (
+    <div className="flex h-full flex-col font-medium text-sm">
+      <Link href="/" className="mb-8 flex items-center gap-2 px-2 text-xl font-bold tracking-tight">
+        <div className="rounded-md bg-black p-1 text-white flex-shrink-0">
+          <Car className="h-5 w-5" />
+        </div>
+        CARRENT
+      </Link>
+
+      <div className="flex-1 space-y-1">
+        {navItems.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+              pathname === item.href ? 'bg-gray-100 text-black' : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+            }`}
+          >
+            <item.icon className="h-4 w-4" />
+            {item.label}
+          </Link>
+        ))}
+
+        {user?.type === 'agency' && (
+          <Link
+            href="/agency/cars"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-colors ${
+              pathname === '/agency/cars' ? 'bg-gray-100 text-black' : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+            }`}
+          >
+            <Car className="h-4 w-4" />
+            My Garage
+          </Link>
+        )}
+      </div>
+
+      <div className="mt-8 space-y-1">
+        {user ? (
+          <button
+            onClick={logout}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-black text-left"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
+        ) : (
+          <Link
+            href="/login?type=customer"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-colors hover:bg-gray-50 hover:text-black"
+          >
+            <LogOut className="h-4 w-4" />
+            Login
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function Navbar() {
   const { user, logout } = useAuth()
@@ -34,12 +102,13 @@ export function Navbar() {
           href="/" 
           className="flex items-center gap-2 font-bold text-2xl tracking-tight"
         >
-          <div className="rounded-md bg-black p-1.5 text-white">
+          <div className={`rounded-md ${isScrolled ? 'bg-black text-white' : 'bg-white text-black'} p-1.5`}>
             <Car className="w-5 h-5" />
           </div>
           <span className={isScrolled ? 'text-black' : 'text-white'}>CARRENT</span>
         </Link>
 
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
           <Link href="/cars" className={`text-sm font-semibold transition-colors ${isScrolled ? 'text-gray-600 hover:text-black' : 'text-white/80 hover:text-white'}`}>
             Browse Garage
@@ -94,68 +163,24 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile menu button */}
-        <button
-          className={`md:hidden p-2 transition-colors ${isScrolled ? 'text-gray-900' : 'text-white'}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white text-black shadow-lg">
-          <div className="px-4 py-6 space-y-4">
-            <Link href="/cars" className="block text-lg font-semibold hover:text-gray-600 transition-colors border-b border-gray-100 pb-4 mb-4">
-              BROWSE GARAGE
-            </Link>
-            
-            {user ? (
-              <>
-                <div className="text-sm font-medium text-gray-500 border-b border-gray-100 pb-2">
-                  <span className="text-gray-400 text-xs block mb-1">Signed in as</span>
-                  {user.type === 'agency' ? user.agencyName || user.name : user.name}
-                </div>
-                {user.type === 'agency' && (
-                  <>
-                    <Link href="/agency/cars" className="block text-lg font-semibold hover:text-gray-600 transition-colors">
-                      Garage
-                    </Link>
-                    <Link href="/agency/bookings" className="block text-lg font-semibold hover:text-gray-600 transition-colors">
-                      Logs
-                    </Link>
-                  </>
-                )}
-                {user.type === 'customer' && (
-                  <Link href="/customer/bookings" className="block text-lg font-semibold hover:text-gray-600 transition-colors">
-                    MY BOOKINGS
-                  </Link>
-                )}
+        {/* Mobile menu button (Sheet Trigger) */}
+        <div className="md:hidden">
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild>
                 <button
-                  onClick={logout}
-                  className="block w-full text-left text-lg font-semibold text-red-600 hover:text-red-700 mt-6 pt-4 border-t border-gray-100"
+                  className={`p-2 transition-colors rounded-md ${isScrolled ? 'text-gray-900 hover:bg-gray-100' : 'text-white hover:bg-white/10'}`}
                 >
-                  Logout
+                  <Menu className="w-6 h-6" />
                 </button>
-              </>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <Link href="/login?type=customer" className="block">
-                  <button className="w-full py-3 text-lg font-semibold bg-gray-100 rounded-lg">
-                    RIDER LOGIN
-                  </button>
-                </Link>
-                <Link href="/login?type=agency" className="block">
-                  <button className="w-full py-3 text-lg font-semibold bg-black text-white rounded-lg">
-                    AGENCY LOGIN
-                  </button>
-                </Link>
-              </div>
-            )}
-          </div>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[280px] p-6">
+                <SheetTitle className="sr-only">Menu</SheetTitle>
+                <NavbarMobileContent user={user} logout={logout} pathname={pathname} />
+              </SheetContent>
+            </Sheet>
         </div>
-      )}
+
+      </div>
     </nav>
   )
 }

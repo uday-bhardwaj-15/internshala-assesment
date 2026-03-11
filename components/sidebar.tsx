@@ -2,13 +2,12 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { Car, Home, Calendar, Heart, Clock, Bell, MessageSquare, Shield, HelpCircle, LogOut } from 'lucide-react'
+import { Car, Home, Calendar, Heart, LogOut, Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 
-export function Sidebar() {
-  const { user, logout } = useAuth()
-  const pathname = usePathname()
-
+function SidebarContent({ user, logout, pathname }: any) {
   const navItems = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: Car, label: 'Vehicles', href: '/cars' },
@@ -17,9 +16,9 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r bg-white px-4 py-6 text-sm font-medium">
+    <div className="flex h-full flex-col font-medium text-sm">
       <Link href="/" className="mb-8 flex items-center gap-2 px-2 text-xl font-bold tracking-tight">
-        <div className="rounded-md bg-black p-1 text-white">
+        <div className="rounded-md bg-black p-1 text-white flex-shrink-0">
           <Car className="h-5 w-5" />
         </div>
         CARRENT
@@ -71,6 +70,40 @@ export function Sidebar() {
           </Link>
         )}
       </div>
-    </aside>
+    </div>
+  )
+}
+
+export function Sidebar({ className }: { className?: string }) {
+  const { user, logout } = useAuth()
+  const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <div className="md:hidden fixed top-0 left-0 w-full h-16 bg-white border-b z-40 flex items-center px-4 justify-between shadow-sm">
+        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight">
+            <div className="rounded-md bg-black p-1 text-white">
+              <Car className="h-5 w-5" />
+            </div>
+            CARRENT
+        </Link>
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <button className="p-2 -mr-2 text-gray-600 hover:bg-gray-100 rounded-md">
+              <Menu className="h-6 w-6" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[280px] p-6">
+            <SheetTitle className="sr-only">Menu</SheetTitle>
+            <SidebarContent user={user} logout={logout} pathname={pathname} />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      <aside className={`hidden md:flex fixed left-0 top-0 z-50 h-screen w-64 flex-col border-r bg-white px-4 py-6 ${className || ''}`}>
+        <SidebarContent user={user} logout={logout} pathname={pathname} />
+      </aside>
+    </>
   )
 }
